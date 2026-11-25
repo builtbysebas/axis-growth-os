@@ -1,0 +1,195 @@
+/* Piezas propias de Axis Growth OS que no existen en la versión completa, con los mismos
+   tokens (vidrio, acento naranja, radios). os.css es copia de la versión completa: no
+   tocarlo; lo nuevo va acá. */
+
+/* ---------- botones ---------- */
+.btn-secondary,
+.btn-danger,
+.btn-ghost {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 14px;
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.18s ease, border-color 0.18s ease, color 0.18s ease;
+}
+.btn-secondary {
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.72);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(17, 17, 20, 0.04);
+}
+.btn-secondary:hover { border-color: rgba(236, 75, 40, 0.35); color: var(--accent); }
+.btn-danger { border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; }
+.btn-danger:hover { background: #fee2e2; }
+.btn-ghost { border: none; background: none; color: var(--ink-soft); padding: 6px 8px; }
+.btn-ghost:hover { color: var(--accent); }
+.btn-secondary:disabled, .btn-danger:disabled, .crm-create-btn:disabled { opacity: 0.55; cursor: default; }
+.btn-secondary svg, .btn-danger svg, .btn-ghost svg { width: 15px; height: 15px; }
+.btn-sm { padding: 6px 10px; font-size: 12px; }
+
+/* ---------- formularios genéricos en paneles y páginas ---------- */
+.lite-form { display: flex; flex-direction: column; gap: 0; }
+.lite-form .crm-field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 14px; }
+.lite-form label.crm-field-label, .lite-label { font-size: 10.5px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+.lite-input,
+.lite-form input:not([type=checkbox]):not([type=radio]),
+.lite-form select,
+.lite-form textarea {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.72);
+  border-radius: var(--radius-sm);
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.lite-form textarea { min-height: 84px; resize: vertical; line-height: 1.45; }
+.lite-input:focus,
+.lite-form input:focus,
+.lite-form select:focus,
+.lite-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.lite-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.lite-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
+.lite-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
+.lite-actions .spacer { flex: 1; }
+.lite-error { color: #b91c1c; font-size: 12.5px; min-height: 1em; margin: 6px 0; }
+.lite-hint { font-size: 12px; color: var(--ink-faint); margin: -6px 0 12px; }
+.lite-check { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.lite-check input { width: 16px; height: 16px; accent-color: var(--accent); }
+.lite-section-title { font-size: 12px; font-weight: 800; color: var(--ink); margin: 18px 0 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+
+/* ---------- modal de confirmación ---------- */
+.lite-modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 400;
+  background: rgba(23, 23, 27, 0.32);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  animation: overlayFadeIn 0.18s ease both;
+}
+.lite-modal {
+  width: min(420px, 100%);
+  background: var(--glass-bg-strong);
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 22px;
+  animation: fadeSlideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.lite-modal h3 { font-size: 16px; font-weight: 800; margin-bottom: 8px; }
+.lite-modal p { font-size: 13.5px; color: var(--ink-soft); line-height: 1.5; white-space: pre-wrap; }
+.lite-modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
+
+/* ---------- avisos ---------- */
+.lite-toasts { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); z-index: 500; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+.lite-toast {
+  background: rgba(23, 23, 27, 0.88);
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 999px;
+  box-shadow: 0 10px 30px rgba(17, 17, 20, 0.25);
+  backdrop-filter: blur(12px);
+  animation: fadeSlideUp 0.25s cubic-bezier(0.22, 1, 0.36, 1) both;
+  transition: opacity 0.35s ease, transform 0.35s ease;
+  max-width: min(560px, 92vw);
+  text-align: center;
+}
+.lite-toast.error { background: rgba(185, 28, 28, 0.94); }
+.lite-toast.out { opacity: 0; transform: translateY(8px); }
+
+/* ---------- estados vacíos / cargando ---------- */
+.lite-empty { text-align: center; color: var(--ink-faint); font-size: 13px; padding: 36px 12px; }
+.lite-loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--ink-soft); font-size: 13px; padding: 48px 12px; }
+.lite-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(236, 75, 40, 0.2); border-top-color: var(--accent); animation: liteSpin 0.8s linear infinite; }
+@keyframes liteSpin { to { transform: rotate(360deg); } }
+
+/* ---------- tarjeta genérica de vidrio ---------- */
+.lite-card {
+  background: var(--glass-bg);
+  backdrop-filter: blur(24px) saturate(170%);
+  -webkit-backdrop-filter: blur(24px) saturate(170%);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--glass-shadow);
+  padding: 20px;
+}
+
+/* ---------- tabla genérica (mismo look que .clients-table) ---------- */
+.lite-table-wrap { overflow-x: auto; border-radius: var(--radius-lg); }
+.lite-table { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 13px; }
+.lite-table th { text-align: left; font-size: 10.5px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; padding: 10px 12px; border-bottom: 1px solid rgba(17, 17, 20, 0.06); white-space: nowrap; }
+.lite-table td { padding: 11px 12px; border-bottom: 1px solid rgba(17, 17, 20, 0.05); color: var(--ink); vertical-align: middle; }
+.lite-table tr:last-child td { border-bottom: none; }
+.lite-table tbody tr { transition: background 0.15s ease; }
+.lite-table tbody tr.clickable { cursor: pointer; }
+.lite-table tbody tr.clickable:hover { background: rgba(236, 75, 40, 0.04); }
+.lite-table .num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* ---------- pastillas de estado ---------- */
+.lite-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; font-size: 11px; font-weight: 700; background: rgba(17, 17, 20, 0.06); color: var(--ink-soft); white-space: nowrap; }
+.lite-pill.green { background: #ecfdf5; color: #047857; }
+.lite-pill.red { background: #fef2f2; color: #b91c1c; }
+.lite-pill.amber { background: #fffbeb; color: #b45309; }
+.lite-pill.indigo { background: #eef2ff; color: #4338ca; }
+.lite-pill.orange { background: rgba(236, 75, 40, 0.1); color: var(--accent); }
+
+/* ---------- copiar ---------- */
+.lite-copyrow { display: flex; gap: 8px; align-items: stretch; }
+.lite-copyrow input { flex: 1; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+
+/* ---------- pantalla de alta (primer admin) ---------- */
+.login-page .login-setup-note { font-size: 12.5px; color: var(--ink-soft); margin: -4px 0 14px; text-align: center; }
+.login-page .login-alt { display: block; margin: 14px auto 0; border: none; background: none; color: var(--accent); font-weight: 700; cursor: pointer; font-size: 13px; }
+
+@media (max-width: 640px) {
+  .lite-grid2, .lite-grid3 { grid-template-columns: 1fr; }
+}
+
+/* En os.css `.login-page input { width: 100% }` le gana al checkbox de «Recordarme». */
+.login-page .login-remember input { width: auto; }
+.login-page .login-alt { width: auto; margin: 14px auto 0; padding: 6px; background: none; color: var(--accent); }
+
+/* ---------- arrastrar y soltar (core/dnd.js) ---------- */
+.lite-drag-ghost {
+  position: fixed !important;
+  z-index: 600;
+  pointer-events: none;
+  margin: 0 !important;
+  box-shadow: 0 18px 40px rgba(17, 17, 20, 0.22) !important;
+  opacity: 0.96;
+  transition: none !important;
+  animation: none !important;
+}
+.lite-dragging { opacity: 0.35; }
+.lite-drop-marker {
+  height: 4px;
+  border-radius: 4px;
+  margin: 2px 4px 8px;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12);
+}
+.lite-drop-over { box-shadow: 0 0 0 2px rgba(236, 75, 40, 0.28) inset; }
+html.lite-is-dragging, html.lite-is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
+
+/* En la versión completa (React) las columnas, tarjetas y tiles animan su entrada una sola
+   vez. Acá cada pantalla redibuja con innerHTML y la animación se repetiría en
+   cada cambio (parpadeo): pasado el primer momento, la página queda «asentada»
+   y solo animan los elementos nuevos que lo pidan con .lite-anim. */
+.lite-settled *:not(.lite-spinner):not(.dx-loading-dot):not(.fx-wave-letter):not(.dxe-live):not(.lite-anim) { animation: none !important; }

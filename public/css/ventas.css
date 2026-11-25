@@ -1,0 +1,45 @@
+/* Estilos propios de Ventas en Lite (el resto viene de os.css, igual que la versión completa). */
+
+.crm-card.lite-draggable { cursor: grab; touch-action: manipulation; }
+
+/* Conteo dentro de los chips de filtro */
+.lite-chip-count { font-size: 10.5px; font-weight: 700; opacity: 0.6; margin-left: 2px; }
+
+/* Columna «Agregar columna» */
+.crm-add-column { display: flex; align-items: flex-start; }
+.crm-add-column .crm-add-column-btn { width: 100%; }
+.crm-add-column-form .lite-input { margin-bottom: 8px; }
+
+/* Menú de la columna: que no lo corte el encabezado */
+.crm-column-header .decision-menu-wrapper { position: relative; }
+
+/* Panel: links y filas de llamadas atrasadas */
+.lite-wa-link { display: inline-block; font-size: 12px; font-weight: 700; color: #059669; margin: -8px 0 14px; text-decoration: none; }
+.lite-wa-link:hover { text-decoration: underline; }
+.lite-overdue-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 100%;
+  text-align: left;
+  padding: 11px 13px;
+  margin-bottom: 8px;
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.6);
+  font-family: inherit;
+  cursor: pointer;
+}
+.lite-overdue-row strong { font-size: 13.5px; color: var(--ink); }
+.lite-overdue-row span { font-size: 12px; color: var(--ink-soft); }
+.lite-overdue-row:hover { border-color: rgba(236, 75, 40, 0.35); }
+
+/* Resultado: los campos se apilan con aire */
+.crm-outcome .lite-outcome-fields { display: flex; flex-direction: column; gap: 8px; }
+.crm-outcome .lite-error { margin: 2px 0 0; }
+
+/* Calendario: el chip de Ventas es un botón */
+button.content-calendar-chip { border: none; font-family: inherit; text-align: left; width: 100%; cursor: pointer; }
+
+/* Toggle Semana/Mes arriba a la derecha (en OS vive dentro de una fila flex) */
+.lite-cal-head { display: flex; justify-content: flex-end; margin-bottom: 12px; }

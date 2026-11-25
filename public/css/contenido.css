@@ -1,0 +1,142 @@
+/* Estilos propios del módulo Contenido (planificador, panel y Recursos y Ángulos).
+   Todo lo base viene de os.css (.content-calendar-*, .content-code-*, .relation-picker-*,
+   .content-reference-*); acá solo lo que Lite agrega. */
+
+/* ---------- calendario ---------- */
+/* El arrastre usa core/dnd.js: mismo resaltado que .drop-over de la versión completa. */
+.content-calendar-cell.lite-drop-over {
+  border-color: var(--accent);
+  background: rgba(236, 75, 40, 0.1);
+  box-shadow: 0 0 0 2px rgba(236, 75, 40, 0.15) inset;
+}
+.content-calendar-chip.lite-dragging { opacity: 0.35; }
+/* Igual que las tarjetas de Ventas: el dedo puede scrollear; arrastrar = mantener presionado. */
+.content-calendar-chip { touch-action: manipulation; }
+.content-calendar-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Sin permiso de reagendar: los chips se abren pero no se arrastran. */
+.content-calendar-chip.content-chip-readonly { cursor: pointer; touch-action: auto; }
+.content-calendar-cell.content-cell-readonly { cursor: default; }
+.content-calendar-cell.content-cell-readonly:hover { border-color: var(--glass-border); }
+.content-calendar-chip-overlay.lite-drag-ghost { display: flex; }
+.content-calendar > .content-code-hint { margin-top: 10px; text-align: center; }
+/* En el celular (sin mouse) la ✕ queda visible: no hay «pasar el mouse». */
+@media (hover: none) {
+  .content-calendar-chip-delete { opacity: 0.7; }
+}
+/* En pantallas angostas cada día mide ~45 px: sin ✕ ni «+ agregar» (se borra desde
+   el panel y se crea tocando el día o con «+ Crear»); el chip ocupa todo el ancho. */
+@media (max-width: 640px) {
+  .content-calendar-days .content-calendar-chip-delete,
+  .content-calendar-days .content-calendar-add { display: none; }
+  .content-calendar-days .content-calendar-chip { width: 100%; }
+}
+
+/* ---------- lista ---------- */
+.content-list-table td.num,
+.content-list-table th.num { text-align: right; font-variant-numeric: tabular-nums; }
+.content-list-date { white-space: nowrap; }
+.content-list-table .clients-table-name { max-width: 320px; }
+.content-dot-amber {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  margin-right: 7px;
+  vertical-align: middle;
+}
+@media (max-width: 640px) {
+  .content-list-table { min-width: 720px; }
+}
+
+/* ---------- panel de detalle ---------- */
+.content-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(96px, 1fr));
+  gap: 8px;
+  margin-bottom: 18px;
+}
+.content-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+}
+.content-stat span { font-size: 10.5px; font-weight: 700; color: var(--ink-faint); text-transform: uppercase; letter-spacing: 0.5px; }
+.content-stat strong { font-size: 18px; font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+.content-stat:first-child strong { color: #047857; }
+.content-stats-hint { grid-column: 1 / -1; font-size: 11px; color: var(--ink-faint); line-height: 1.45; margin: 0; }
+
+.crm-panel .content-editable { cursor: text; border-radius: 6px; padding: 5px 6px; margin: 0 -6px; transition: background 0.15s ease; overflow-wrap: anywhere; }
+.crm-panel .content-editable:hover,
+.crm-panel .content-editable:focus-visible { background: rgba(236, 75, 40, 0.06); outline: none; }
+.content-empty-val { color: var(--ink-faint); font-size: 13px; }
+.crm-panel .crm-field input[type='date'],
+.crm-panel .content-edit-input {
+  padding: 8px 10px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 8px;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink);
+  width: 100%;
+}
+.crm-panel .content-edit-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.content-field-hint { font-size: 11px; color: var(--ink-faint); line-height: 1.4; }
+.content-open-link { font-size: 12px; font-weight: 700; color: var(--accent); text-decoration: none; align-self: flex-start; }
+.content-open-link:hover { text-decoration: underline; }
+.crm-panel .lite-grid2 .crm-field { min-width: 0; }
+
+.content-linked-resource { flex-wrap: wrap; }
+a.content-linked-resource-url { text-decoration: none; min-width: 0; }
+a.content-linked-resource-url:hover { color: var(--accent); }
+@media (max-width: 640px) {
+  .content-linked-resource-url { flex-basis: 100%; order: 3; }
+  .relation-picker-popover { width: min(260px, calc(100vw - 48px)); }
+}
+
+.content-guion {
+  width: 100%;
+  min-height: 220px;
+  padding: 12px 14px;
+  border: 1px solid #e5e5e5;
+  border-radius: var(--radius-sm);
+  background: #fff;
+  font-family: inherit;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  resize: vertical;
+}
+.content-guion:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.content-guion-status { display: block; min-height: 1em; margin-top: 4px; font-size: 11px; font-weight: 700; color: #10b981; }
+.content-guion-view {
+  white-space: pre-wrap;
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: var(--ink);
+  background: #fff;
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+}
+.crm-panel .crm-notes .crm-add-note-form { margin: 0 0 12px; }
+
+.content-create-form .content-code-hint { margin: 0 0 4px; }
+.content-create-submit { justify-content: center; margin-top: 6px; }
+
+/* ---------- Recursos y Ángulos ---------- */
+.content-library-hint { font-size: 12.5px; color: var(--ink-faint); margin: -4px 0 12px; }
+.content-library .content-reference-item { flex-wrap: wrap; }
+.content-library .content-reference-item-main { flex: 1; }
+.content-library-url { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 100%; }
+.content-library .sop-item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.content-move-btn { min-width: 30px; }
+.content-move-btn:disabled { opacity: 0.35; cursor: default; }
+.content-library-form input { min-width: 0; }
+@media (max-width: 640px) {
+  .content-library-form input { flex-basis: 100%; }
+}

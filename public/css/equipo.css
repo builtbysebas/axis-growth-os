@@ -1,0 +1,89 @@
+/* Estilos propios del módulo Equipo (EOD, EOD equipo, Metas, Usuarios, Ajustes).
+   Lo demás sale de os.css (dxe-*, dx-*, goals-*, users-table, role-checkbox…). */
+
+/* ---------- comunes ---------- */
+.eq-hint { font-size: 12.5px; color: var(--ink-soft); margin: -4px 0 14px; line-height: 1.5; }
+.eq-hint-block { max-width: 760px; margin: 0 0 16px; }
+.eq-hint-after { margin: 6px 0 0; }
+.eq-muted { color: var(--ink-faint); font-weight: 500; }
+.eq-ok { color: #047857; font-weight: 700; }
+.eq-nowrap { white-space: nowrap; }
+.eq-sub-label { display: block; font-size: 11.5px; font-weight: 800; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.4px; margin: 4px 0 10px; }
+
+/* ---------- Mi EOD ---------- */
+.eq-eod .eq-summary > .dx-tiles { margin-bottom: 18px; }
+.eq-eod .eq-summary { margin-bottom: 8px; }
+.eq-derived > .dx-tiles { margin-bottom: 26px; }
+.eq-eod .dxe-form-card .eod-form { display: flex; flex-direction: column; gap: 16px; }
+.eq-eod .dxe-savebar-text { overflow-wrap: anywhere; }
+
+/* ---------- EOD equipo ---------- */
+/* La fila de rango (rangeControls) se mete dentro de la misma barra que las pestañas. */
+.eq-controls .eq-rc-inline { display: contents; }
+.eq-admin-eod .eq-controls .dxe-select { max-width: 220px; }
+.eq-admin-eod .dxe-table-wrap .dx-table th { max-width: 160px; white-space: normal; line-height: 1.25; }
+.eq-admin-eod .dxe-answer-label .eq-muted { font-size: 11.5px; }
+
+.eq-admin-eod .sop-item { background: var(--glass-bg); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); border-radius: var(--radius-md, 14px); }
+.eq-admin-eod .sop-item-actions { flex-shrink: 0; }
+.eq-move { min-width: 30px; font-size: 14px; font-weight: 800; }
+.eq-move:disabled { opacity: 0.3; cursor: default; background: transparent; }
+.sop-delete-btn.eq-reactivate { background: #ecfdf5; color: #047857; }
+.sop-delete-btn.eq-reactivate:hover { background: #d1fae5; }
+
+.eq-q-edit { background: var(--glass-bg-strong); border: 1px solid var(--glass-border); box-shadow: var(--glass-shadow); }
+.eq-q-edit input[data-texto] { flex: 2 1 220px; min-width: 0; }
+.eq-q-edit .role-checkboxes { margin-top: 0; }
+.eq-q-edit-actions { display: inline-flex; gap: 8px; margin-left: auto; }
+.eq-q-edit-actions .btn-secondary { padding: 9px 14px; }
+
+/* ---------- Usuarios ---------- */
+.eq-users .crm-toolbar-actions { flex-wrap: wrap; }
+.role-checkbox.eq-locked { cursor: not-allowed; opacity: 0.8; }
+.eq-state { margin: 0 0 10px; }
+
+/* ---------- Ajustes ---------- */
+.eq-ajustes .eq-card { max-width: 860px; margin-bottom: 18px; }
+.eq-card-title { font-size: 16px; font-weight: 800; color: var(--ink); margin: 0 0 12px; letter-spacing: -0.2px; }
+.eq-lead { font-size: 13.5px; color: var(--ink-soft); line-height: 1.55; margin: 0 0 16px; }
+.eq-subtitle { font-size: 12px; font-weight: 800; color: var(--ink); text-transform: uppercase; letter-spacing: 0.4px; margin: 20px 0 10px; }
+.eq-copyrow { flex-wrap: wrap; }
+.eq-copyrow input { min-width: 0; flex: 1 1 240px; }
+.eq-steps, .eq-fields { margin: 0 0 6px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 13.5px; color: var(--ink); line-height: 1.5; }
+.eq-steps code, .eq-fields code, .eq-hint code, .lite-hint code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  background: rgba(17, 17, 20, 0.06);
+  padding: 1px 6px;
+  border-radius: 6px;
+  overflow-wrap: anywhere;
+}
+.eq-examples { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr)); gap: 12px; margin-top: 12px; }
+.eq-examples .crm-field-label { display: block; margin-bottom: 6px; }
+.eq-codewrap { position: relative; margin-top: 8px; min-width: 0; }
+.eq-code {
+  margin: 0;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #17171b;
+  color: #f4f4f5;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 12px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-x: auto;
+  max-width: 100%;
+}
+.eq-codewrap .eq-code { padding-right: 76px; }
+.eq-code-copy { position: absolute; top: 8px; right: 8px; background: rgba(255, 255, 255, 0.92); }
+.eq-users .eq-code, .crm-panel .eq-code { margin: 0 0 14px; }
+
+@media (max-width: 640px) {
+  .eq-admin-eod .eq-controls .dxe-select { max-width: 100%; }
+  .eq-q-edit-actions { margin-left: 0; width: 100%; }
+  .eq-q-edit-actions button { flex: 1; }
+  .eq-admin-eod .eod-question-meta { margin-left: 0; width: 100%; order: 2; }
+  .eq-admin-eod .eod-question-item .sop-item-actions { order: 3; width: 100%; justify-content: flex-end; }
+  .eq-codewrap .eq-code { padding-right: 14px; padding-top: 40px; }
+}

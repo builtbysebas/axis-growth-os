@@ -1,0 +1,27 @@
+/* Dashboard: lo que no trae os.css (usa sus tokens). */
+
+/* Embudo de 4 pasos (os.css trae el de 3). */
+.dsh-steps { grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; }
+.dsh-gap { margin-bottom: 30px; }
+
+/* Tarjeta de aviso: llamadas pasadas sin resultado. */
+.dx-tile.dsh-tile-warn { border-color: rgba(236, 75, 40, 0.35); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.08), var(--glass-shadow); }
+.dx-tile.dsh-tile-warn .dx-tile-value { color: var(--accent); }
+.dx-tile-sub a { color: var(--accent); font-weight: 700; }
+
+/* Detalle de pagos del cash collected (panel lateral). */
+.dsh-cash-totals { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 16px; }
+.dsh-cash-list .client-renewal-item { margin-bottom: 8px; }
+.dsh-cash-amount { font-weight: 800; color: var(--ink); font-variant-numeric: tabular-nums; }
+
+.dsh-team-note { margin: 12px 6px 0; font-size: 12px; line-height: 1.5; color: var(--ink-faint); }
+
+@media (max-width: 1180px) {
+  .dsh-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dsh-steps .dx-step-arrow { display: none; }
+}
+@media (max-width: 640px) {
+  .dsh-steps { grid-template-columns: minmax(0, 1fr); }
+  .dx-hero-value { overflow-wrap: anywhere; }
+  .dsh-page .dx-controls .dx-seg { max-width: 100%; }
+}

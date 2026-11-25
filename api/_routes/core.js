@@ -3,7 +3,7 @@ import crypto from 'node:crypto';
 import { dbEnvNames, dbUrl, derivedSecret, ensureReady, query, tx } from '../_lib/db.js';
 import { checkPassword, clearSession, hashPassword, HttpError, publicUser, setSession } from '../_lib/http.js';
 import { findUserByEmail, USER_COLS } from '../_lib/users.js';
-import { clearTzCache } from '../_lib/util.js';
+import { businessTz, clearTzCache } from '../_lib/util.js';
 
 function validZone(z) {
   if (!z || typeof z !== 'string' || z.length > 64) return false;
@@ -37,6 +37,73 @@ function cleanRoles(v) {
     .map((r) => String(r).trim())
     .filter((r) => ROLES.includes(r));
   return [...new Set(list)].join(',');
+}
+
+// ---- Calendly: setter por link, reagendas y cancelaciones ----
+const norm = (s) =>
+  String(s || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9@._-]+/g, ' ')
+    .trim();
+
+/** Setter según los utm del link de Calendly (correo, nombre completo o primer nombre). */
+async function setterFromTracking(tracking) {
+  const vals = ['utm_source', 'utm_campaign', 'utm_medium', 'utm_term']
+    .map((k) => norm(tracking?.[k]))
+    .filter((x) => x && x.length >= 2);
+  if (!vals.length) return null;
+  const users = await query("select id, nombre, email from ml_usuarios where activo and roles like '%setter%'");
+  for (const val of vals) {
+    const hit =
+      users.find((u) => u.email.toLowerCase() === val) ||
+      users.find((u) => norm(u.nombre) === val) ||
+      users.filter((u) => norm(u.nombre).split(' ')[0] === val).at(0);
+    if (hit) return hit.id;
+  }
+  return null;
+}
+
+async function noteFromCalendly(ventaId, texto) {
+  await query('insert into ml_venta_notas (venta_id, user_id, texto) values ($1, null, $2)', [ventaId, texto.slice(0, 4000)]);
+}
+
+/** La lead canceló desde Calendly: queda anotado y la agenda vuelve a «para hoy» para revisarla. */
+async function calendlyCanceled(p) {
+  if (p.rescheduled) return { ok: true, ignorada: 'reagenda (llega aparte como agenda nueva)' };
+  const [v] = p.uri ? await query('select id from ml_ventas where ref_externa = $1', [String(p.uri)]) : [];
+  if (!v) return { ok: true, ignorada: 'no existe esa agenda' };
+  const motivo = String(p.cancellation?.reason || '').trim();
+  const quien = p.cancellation?.canceler_type === 'host' ? 'Se canceló desde Calendly (lo canceló el equipo)' : 'La lead canceló la llamada desde Calendly';
+  await noteFromCalendly(v.id, `${quien}.${motivo ? `\nMotivo: ${motivo}` : ''}`);
+  await query("update ml_ventas set status = 'para_hoy', proxima_accion = now(), actualizado = now() where id = $1", [v.id]);
+  return { ok: true, id: v.id, cancelada: true };
+}
+
+/** La lead se reagendó con el link de Calendly: se mueve la misma agenda (no se duplica). */
+async function calendlyRescheduled(p) {
+  const [v] = await query('select id from ml_ventas where ref_externa = $1', [String(p.old_invitee)]);
+  if (!v) return null; // no la tenemos: entra como agenda nueva
+  const start = p.scheduled_event?.start_time;
+  const fecha = start && !Number.isNaN(new Date(start).getTime()) ? new Date(start).toISOString() : null;
+  const closerEmail = String(p.scheduled_event?.event_memberships?.[0]?.user_email || '').trim().toLowerCase();
+  const [closer] = closerEmail ? await query('select id from ml_usuarios where email = $1', [closerEmail]) : [];
+  await query(
+    `update ml_ventas set fecha_llamada = coalesce($2, fecha_llamada), proxima_accion = coalesce($2, now()),
+            closer_id = coalesce($3, closer_id), ref_externa = $4, status = case when status in ('ganado', 'perdido') then status else 'para_hoy' end,
+            actualizado = now()
+      where id = $1`,
+    [v.id, fecha, closer?.id || null, p.uri ? String(p.uri) : null],
+  );
+  // «Pidió reagendar» ya se cumplió: se quita para que la llamada nueva cuente normal.
+  await query("delete from ml_resultados where venta_id = $1 and resultado = 'pidio_reagendar'", [v.id]);
+  const tz = await businessTz();
+  const cuando = fecha
+    ? new Intl.DateTimeFormat('es', { timeZone: tz, weekday: 'long', day: 'numeric', month: 'long', hour: 'numeric', minute: '2-digit' }).format(new Date(fecha))
+    : 'sin fecha';
+  await noteFromCalendly(v.id, `La lead se reagendó desde Calendly: ${cuando}.`);
+  return { ok: true, id: v.id, reagendada: true };
 }
 
 export const routes = [
@@ -118,9 +185,9 @@ export const routes = [
     path: '/ajustes',
     auth: 'user',
     handler: async () => {
-      const rows = await query("select key, value from ml_settings where key in ('zona', 'negocio', 'meta_cash')");
+      const rows = await query("select key, value from ml_settings where key in ('zona', 'negocio', 'meta_cash', 'color')");
       const m = Object.fromEntries(rows.map((r) => [r.key, r.value]));
-      return { zona: m.zona || 'America/Lima', negocio: m.negocio || '', metaCash: Number(m.meta_cash || 10000) };
+      return { zona: m.zona || 'America/Lima', negocio: m.negocio || '', metaCash: Number(m.meta_cash || 10000), color: m.color || '' };
     },
   },
   {
@@ -142,6 +209,11 @@ export const routes = [
         clearTzCache();
       }
       if (b.negocio !== undefined) await set('negocio', String(b.negocio).trim().slice(0, 80) || 'Mi negocio');
+      if (b.color !== undefined) {
+        const c = String(b.color).trim().toLowerCase();
+        if (!/^#[0-9a-f]{6}$/.test(c)) throw new HttpError(400, 'Color inválido (ej. #2563eb)');
+        await set('color', c);
+      }
       if (b.metaCash !== undefined) {
         const n = Number(b.metaCash);
         if (!Number.isFinite(n) || n < 0) throw new HttpError(400, 'Meta inválida');
@@ -169,7 +241,9 @@ export const routes = [
       try {
         await ensureReady();
         const [{ n }] = await query('select count(*)::int as n from ml_usuarios');
-        return { connected: true, needsAdmin: n === 0 };
+        // El color de la marca también se ve en la pantalla de inicio de sesión.
+        const [c] = await query("select value from ml_settings where key = 'color'");
+        return { connected: true, needsAdmin: n === 0, color: c?.value || '' };
       } catch (err) {
         return { connected: false, needsAdmin: false, reason: err.message };
       }
@@ -314,7 +388,13 @@ export const routes = [
       const given = req.headers['x-webhook-secret'] || q.k || '';
       if (!sameSecret(given, derivedSecret('manychat'))) throw new HttpError(401, 'no autorizado');
       const b = await body();
+      // Calendly: cancelaciones y reagendas (no crean agendas nuevas).
+      if (b && b.payload && b.event === 'invitee.canceled') return calendlyCanceled(b.payload);
       const cal = b && b.payload && (b.event === 'invitee.created' || b.payload.scheduled_event) ? b.payload : null;
+      if (cal?.old_invitee) {
+        const done = await calendlyRescheduled(cal);
+        if (done) return done;
+      }
       const pick = (...vals) => vals.find((v) => v !== undefined && v !== null && String(v).trim() !== '');
       const answers = cal?.questions_and_answers || [];
       const answer = (re) => answers.find((a) => re.test(String(a.question || '')))?.answer;
@@ -327,6 +407,8 @@ export const routes = [
       const fechaRaw = pick(b.fechaLlamada, b.fecha_llamada, cal?.scheduled_event?.start_time);
       const fecha = fechaRaw && !Number.isNaN(new Date(fechaRaw).getTime()) ? new Date(fechaRaw).toISOString() : null;
       const setterEmail = String(pick(b.setterEmail) || '').trim().toLowerCase();
+      // Sin setterEmail: el link de Calendly de cada setter puede llevar ?utm_source=<nombre o correo del setter>.
+      const setterFromLink = !setterEmail && cal ? await setterFromTracking(cal.tracking) : null;
       const closerEmail = String(pick(b.closerEmail, cal?.scheduled_event?.event_memberships?.[0]?.user_email) || '').trim().toLowerCase();
       const presupuesto = ['con', 'sin'].includes(b.presupuesto) ? b.presupuesto : '';
       const origen = String(pick(b.origen, cal ? 'calendly' : 'webhook')).slice(0, 40);
@@ -344,8 +426,17 @@ export const routes = [
                  (select coalesce(max(orden), 0) + 1 from ml_ventas))
          on conflict (ref_externa) where ref_externa is not null do nothing
          returning id`,
-        [nombre, telefono, email, instagram, contactId, fecha, setter?.id || null, closer?.id || null, presupuesto, origen, ref],
+        [nombre, telefono, email, instagram, contactId, fecha, setter?.id || setterFromLink || null, closer?.id || null, presupuesto, origen, ref],
       );
+      // Las respuestas del formulario de Calendly quedan como primera nota de la agenda.
+      if (v && answers.length) {
+        const texto = answers
+          .filter((a) => String(a.answer ?? '').trim())
+          .map((a) => `${String(a.question || '').trim()}\n→ ${String(a.answer).trim()}`)
+          .join('\n\n')
+          .slice(0, 8000);
+        if (texto) await query('insert into ml_venta_notas (venta_id, user_id, texto) values ($1, null, $2)', [v.id, `Respuestas del formulario de Calendly:\n\n${texto}`]);
+      }
       return { ok: true, id: v?.id || null };
     },
   },

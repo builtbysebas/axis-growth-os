@@ -6,8 +6,8 @@
 /* El arrastre usa core/dnd.js: mismo resaltado que .drop-over de la versión completa. */
 .content-calendar-cell.lite-drop-over {
   border-color: var(--accent);
-  background: rgba(236, 75, 40, 0.1);
-  box-shadow: 0 0 0 2px rgba(236, 75, 40, 0.15) inset;
+  background: rgba(var(--accent-rgb), 0.1);
+  box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.15) inset;
 }
 .content-calendar-chip.lite-dragging { opacity: 0.35; }
 /* Igual que las tarjetas de Ventas: el dedo puede scrollear; arrastrar = mantener presionado. */
@@ -72,7 +72,7 @@
 
 .crm-panel .content-editable { cursor: text; border-radius: 6px; padding: 5px 6px; margin: 0 -6px; transition: background 0.15s ease; overflow-wrap: anywhere; }
 .crm-panel .content-editable:hover,
-.crm-panel .content-editable:focus-visible { background: rgba(236, 75, 40, 0.06); outline: none; }
+.crm-panel .content-editable:focus-visible { background: rgba(var(--accent-rgb), 0.06); outline: none; }
 .content-empty-val { color: var(--ink-faint); font-size: 13px; }
 .crm-panel .crm-field input[type='date'],
 .crm-panel .content-edit-input {
@@ -85,7 +85,7 @@
   color: var(--ink);
   width: 100%;
 }
-.crm-panel .content-edit-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.crm-panel .content-edit-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
 .content-field-hint { font-size: 11px; color: var(--ink-faint); line-height: 1.4; }
 .content-open-link { font-size: 12px; font-weight: 700; color: var(--accent); text-decoration: none; align-self: flex-start; }
 .content-open-link:hover { text-decoration: underline; }
@@ -112,7 +112,7 @@ a.content-linked-resource-url:hover { color: var(--accent); }
   color: var(--ink);
   resize: vertical;
 }
-.content-guion:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.content-guion:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
 .content-guion-status { display: block; min-height: 1em; margin-top: 4px; font-size: 11px; font-weight: 700; color: #10b981; }
 .content-guion-view {
   white-space: pre-wrap;

@@ -24,7 +24,7 @@
   color: var(--ink);
   box-shadow: 0 1px 2px rgba(17, 17, 20, 0.04);
 }
-.btn-secondary:hover { border-color: rgba(236, 75, 40, 0.35); color: var(--accent); }
+.btn-secondary:hover { border-color: rgba(var(--accent-rgb), 0.35); color: var(--accent); }
 .btn-danger { border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; }
 .btn-danger:hover { background: #fee2e2; }
 .btn-ghost { border: none; background: none; color: var(--ink-soft); padding: 6px 8px; }
@@ -55,7 +55,7 @@
 .lite-input:focus,
 .lite-form input:focus,
 .lite-form select:focus,
-.lite-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.lite-form textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
 .lite-grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
 .lite-grid3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 12px; }
 .lite-actions { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-top: 8px; }
@@ -117,7 +117,7 @@
 /* ---------- estados vacíos / cargando ---------- */
 .lite-empty { text-align: center; color: var(--ink-faint); font-size: 13px; padding: 36px 12px; }
 .lite-loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: var(--ink-soft); font-size: 13px; padding: 48px 12px; }
-.lite-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(236, 75, 40, 0.2); border-top-color: var(--accent); animation: liteSpin 0.8s linear infinite; }
+.lite-spinner { width: 16px; height: 16px; border-radius: 50%; border: 2px solid rgba(var(--accent-rgb), 0.2); border-top-color: var(--accent); animation: liteSpin 0.8s linear infinite; }
 @keyframes liteSpin { to { transform: rotate(360deg); } }
 
 /* ---------- tarjeta genérica de vidrio ---------- */
@@ -139,7 +139,7 @@
 .lite-table tr:last-child td { border-bottom: none; }
 .lite-table tbody tr { transition: background 0.15s ease; }
 .lite-table tbody tr.clickable { cursor: pointer; }
-.lite-table tbody tr.clickable:hover { background: rgba(236, 75, 40, 0.04); }
+.lite-table tbody tr.clickable:hover { background: rgba(var(--accent-rgb), 0.04); }
 .lite-table .num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* ---------- pastillas de estado ---------- */
@@ -148,7 +148,7 @@
 .lite-pill.red { background: #fef2f2; color: #b91c1c; }
 .lite-pill.amber { background: #fffbeb; color: #b45309; }
 .lite-pill.indigo { background: #eef2ff; color: #4338ca; }
-.lite-pill.orange { background: rgba(236, 75, 40, 0.1); color: var(--accent); }
+.lite-pill.orange { background: rgba(var(--accent-rgb), 0.1); color: var(--accent); }
 
 /* ---------- copiar ---------- */
 .lite-copyrow { display: flex; gap: 8px; align-items: stretch; }
@@ -183,9 +183,9 @@
   border-radius: 4px;
   margin: 2px 4px 8px;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
-  box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12);
+  box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12);
 }
-.lite-drop-over { box-shadow: 0 0 0 2px rgba(236, 75, 40, 0.28) inset; }
+.lite-drop-over { box-shadow: 0 0 0 2px rgba(var(--accent-rgb), 0.28) inset; }
 html.lite-is-dragging, html.lite-is-dragging * { cursor: grabbing !important; user-select: none; -webkit-user-select: none; }
 
 /* En la versión completa (React) las columnas, tarjetas y tiles animan su entrada una sola

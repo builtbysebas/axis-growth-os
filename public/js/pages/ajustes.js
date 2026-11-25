@@ -2,9 +2,10 @@
 // meta de cash), cómo conectar ManyChat, cómo recibir agendas automáticamente
 // (Calendly, Zapier, n8n o un formulario propio) y los últimos avisos recibidos.
 // Usa las rutas de core: GET/PATCH /ajustes, GET /settings, GET /events.
-import { get, patch } from '../core/api.js';
+import { get, patch, post } from '../core/api.js';
 import { esc, fmtDateTime, on } from '../core/dom.js';
 import { dxHeader, loading, toast } from '../core/ui.js';
+import { applyTheme, normalizeColor, THEMES, DEFAULT_COLOR } from '../core/theme.js';
 
 const ZONAS = [
   ['America/Lima', 'Perú'],
@@ -100,8 +101,9 @@ export async function render(root, ctx) {
   let aj;
   let settings;
   let events;
+  let calendly;
   try {
-    [aj, settings, events] = await Promise.all([get('/ajustes'), get('/settings'), get('/events')]);
+    [aj, settings, events, calendly] = await Promise.all([get('/ajustes'), get('/settings'), get('/events'), get('/calendly').then((r) => r.calendly)]);
   } catch (err) {
     content.innerHTML = `<div class="lite-empty">No se pudieron cargar los ajustes: ${esc(err.message)}</div>`;
     return;
@@ -162,6 +164,57 @@ export async function render(root, ctx) {
   const zonaKnown = ZONAS.some(([z]) => z === aj.zona);
   const zonas = zonaKnown ? ZONAS : [[aj.zona, aj.zona], ...ZONAS];
 
+  function calendlyCard() {
+    if (calendly?.conectado) {
+      return `
+        <h2 class="eq-card-title">Calendly <span class="lite-pill green">Conectado</span></h2>
+        <p class="eq-lead">Cada agenda de Calendly entra sola a <strong>Ventas</strong>, sin Zapier ni n8n. Cuenta: <strong>${esc(calendly.cuenta || calendly.nombre || '—')}</strong>${calendly.alcance === 'user' ? ' (solo las agendas de esta persona)' : ' (todas las personas de la cuenta)'} · desde ${esc(fmtDateTime(calendly.desde))}.</p>
+        ${calendlyHelp()}
+        <details class="eq-details">
+          <summary>Desconectar o volver a conectar</summary>
+          <p class="lite-hint">Pega de nuevo un token de Calendly (el mismo u otro) para confirmar.</p>
+          ${tokenForm('Volver a conectar', true)}
+        </details>`;
+    }
+    return `
+      <h2 class="eq-card-title">Conectar Calendly</h2>
+      <p class="eq-lead">Cada vez que alguien agende, cancele o se reagende en Calendly, se refleja solo en <strong>Ventas</strong>. Sin Zapier, sin n8n y sin pagar nada extra.</p>
+      <ol class="eq-steps">
+        <li>Entra a Calendly → <strong>Integraciones y apps</strong> → <strong>API y webhooks</strong> (<a href="https://calendly.com/integrations/api_webhooks" target="_blank" rel="noopener">abrir</a>).</li>
+        <li>Toca <strong>«Obtener un token nuevo»</strong>, ponle de nombre <em>${esc(aj.negocio || 'Mi OS')}</em> y copia el token.</li>
+        <li>Pégalo acá abajo y toca <strong>Conectar</strong>. El token no se guarda: solo se usa para crear la conexión.</li>
+      </ol>
+      ${tokenForm('Conectar', false)}
+      ${calendlyHelp()}`;
+  }
+
+  function tokenForm(label, connected) {
+    return `
+      <form class="lite-form eq-token-form" data-calendly-form novalidate>
+        <div class="crm-field">
+          <label class="crm-field-label" for="eq-cal-token">Token de Calendly</label>
+          <input id="eq-cal-token" name="token" type="password" autocomplete="off" spellcheck="false" placeholder="eyJraWQiOi…">
+        </div>
+        <div class="lite-error" data-error></div>
+        <div class="lite-actions">
+          <button type="submit" class="crm-create-btn">${esc(label)}</button>
+          ${connected ? '<button type="button" class="btn-secondary" data-calendly-off>Desconectar</button>' : ''}
+        </div>
+      </form>`;
+  }
+
+  function calendlyHelp() {
+    return `
+      <h3 class="eq-subtitle">Qué entra solo</h3>
+      <ul class="eq-fields">
+        <li>Nombre, correo, la hora de la llamada y la <strong>closer</strong> (por el correo de quien recibe la llamada en Calendly: tiene que ser el mismo con el que entra acá).</li>
+        <li>Teléfono e Instagram, si tu formulario de Calendly tiene esas preguntas. Todas las respuestas quedan como primera nota de la agenda.</li>
+        <li><strong>Setter:</strong> en el link de Calendly de cada setter agrega <code>?utm_source=nombre</code> (ej. <code>calendly.com/tu-link?utm_source=rocio</code>). Sirve el primer nombre, el nombre completo o el correo del setter.</li>
+        <li><strong>ManyChat:</strong> si el link lleva <code>utm_content={{user_id}}</code>, la agenda se une con lo que respondió en tus contenidos.</li>
+        <li>Si la lead <strong>se reagenda</strong>, se mueve la misma agenda (no se duplica). Si <strong>cancela</strong>, queda anotado y vuelve a «para hoy» para que alguien la contacte.</li>
+      </ul>`;
+  }
+
   function eventsTable() {
     const list = (events?.events || []).slice(0, 25);
     if (!list.length) return '<div class="lite-empty">Todavía no llegó ningún aviso de ManyChat. Cuando configures la automatización, aparecen acá.</div>';
@@ -219,6 +272,24 @@ export async function render(root, ctx) {
     </section>
 
     <section class="lite-card eq-card">
+      <h2 class="eq-card-title">Color del sistema</h2>
+      <p class="eq-lead">El color de tu marca en botones, menú, gráficos y en la pantalla de inicio de sesión. Lo ve todo tu equipo.</p>
+      <div class="eq-themes" role="radiogroup" aria-label="Color del sistema" data-themes>
+        ${THEMES.map(
+          (th) => `<button type="button" class="eq-theme" role="radio" data-color="${th.color}" aria-label="${esc(th.label)}" title="${esc(th.label)}">
+            <span class="eq-theme-dot" style="background:linear-gradient(135deg, ${th.color}, ${th.color2})"></span>
+            <span class="eq-theme-name">${esc(th.label)}</span>
+          </button>`,
+        ).join('')}
+        <label class="eq-theme eq-theme-custom" title="Elegir otro color">
+          <span class="eq-theme-dot eq-theme-dot-custom"><input type="color" data-custom aria-label="Otro color"></span>
+          <span class="eq-theme-name">Otro</span>
+        </label>
+      </div>
+      <p class="lite-hint eq-hint-after">Si eliges un color muy claro, se oscurece un poco solo para que el texto blanco de los botones se lea.</p>
+    </section>
+
+    <section class="lite-card eq-card">
       <h2 class="eq-card-title">Conectar ManyChat</h2>
       <p class="eq-lead">Con esto, cada respuesta a un contenido, cada llamada propuesta y cada link enviado por un setter llega solo a ${esc(aj.negocio)}: así se cuentan las propuestas y links de cada setter y se sabe qué contenido trajo cada agenda.</p>
       <div class="crm-field">
@@ -258,16 +329,19 @@ export async function render(root, ctx) {
       <p class="lite-hint eq-hint-after">Si el código del contenido no coincide con ninguno, el aviso se guarda igual («Sin match»): nunca se pierde un lead.</p>
     </section>
 
+    <section class="lite-card eq-card" data-calendly-card>
+      ${calendlyCard()}
+    </section>
+
     <section class="lite-card eq-card">
-      <h2 class="eq-card-title">Recibir agendas automáticamente</h2>
-      <p class="eq-lead">Pega esta dirección en la herramienta donde la gente agenda y cada agenda nueva entra sola a <strong>Ventas</strong>, en la primera columna. Sirve para <strong>Calendly</strong>, <strong>Zapier</strong>, <strong>n8n</strong> o un formulario propio.</p>
+      <h2 class="eq-card-title">Recibir agendas desde otra herramienta</h2>
+      <p class="eq-lead">Si no usas Calendly (o prefieres otra vía), pega esta dirección en la herramienta donde la gente agenda y cada agenda nueva entra sola a <strong>Ventas</strong>, en la primera columna. Sirve para <strong>Zapier</strong>, <strong>n8n</strong>, <strong>Make</strong> o un formulario propio.</p>
       <div class="crm-field">
         <span class="crm-field-label">Dirección para agendas (ya incluye la clave)</span>
         ${copyRow(agendaUrl, { secret: true, label: 'Dirección para agendas', key: 'agUrl' })}
         <p class="lite-hint eq-hint-after">Esta dirección lleva tu clave adentro: trátala como una contraseña.</p>
       </div>
       <ul class="eq-fields">
-        <li><strong>Calendly:</strong> crea un webhook para el evento <strong>«invitee.created»</strong> y pega esta dirección. Se toman solos el nombre, correo, teléfono e Instagram de las preguntas, la hora de la llamada, la closer (por el correo del organizador) y el Contact ID de ManyChat si viaja como <code>utm_content</code> en el link.</li>
         <li><strong>Zapier, n8n o tu formulario:</strong> que haga un <strong>POST</strong> a esta dirección con un JSON como el de abajo. Solo <code>nombre</code> es obligatorio. <code>fechaLlamada</code> va con fecha y hora; <code>presupuesto</code> es <code>"con"</code> o <code>"sin"</code>; <code>setterEmail</code> y <code>closerEmail</code> son los correos con los que entran acá.</li>
         <li><code>ref</code> es un identificador único de esa agenda: si la herramienta reintenta el envío, no se duplica.</li>
       </ul>
@@ -279,8 +353,76 @@ export async function render(root, ctx) {
       ${eventsTable()}
     </section>`;
 
+  // ---- Calendly ----
+  async function calendlyAction(form, action) {
+    const err = form.querySelector('[data-error]');
+    err.textContent = '';
+    const token = form.token.value.trim();
+    if (!token) return (err.textContent = 'Pega el token de Calendly.');
+    const buttons = form.querySelectorAll('button');
+    buttons.forEach((b) => (b.disabled = true));
+    try {
+      if (action === 'conectar') {
+        calendly = (await post('/calendly/conectar', { token })).calendly;
+        toast('Calendly conectado ✓');
+      } else {
+        await post('/calendly/desconectar', { token });
+        calendly = null;
+        toast('Calendly desconectado');
+      }
+      content.querySelector('[data-calendly-card]').innerHTML = calendlyCard();
+    } catch (e2) {
+      err.textContent = e2.message;
+      buttons.forEach((b) => (b.disabled = false));
+    }
+  }
+
+  // ---- color ----
+  let currentColor = normalizeColor(aj.color || DEFAULT_COLOR);
+  const themesEl = content.querySelector('[data-themes]');
+  const customInput = content.querySelector('[data-custom]');
+  function markTheme() {
+    let preset = false;
+    themesEl.querySelectorAll('[data-color]').forEach((b) => {
+      const on_ = b.dataset.color === currentColor;
+      preset ||= on_;
+      b.classList.toggle('active', on_);
+      b.setAttribute('aria-checked', String(on_));
+    });
+    const custom = themesEl.querySelector('.eq-theme-custom');
+    custom.classList.toggle('active', !preset);
+    customInput.value = currentColor;
+    if (!preset) custom.querySelector('.eq-theme-dot').style.background = currentColor;
+  }
+  markTheme();
+  async function saveColor(c) {
+    const before = currentColor;
+    currentColor = applyTheme(c);
+    markTheme();
+    try {
+      await patch('/ajustes', { color: currentColor });
+      if (ctx.ajustes) ctx.ajustes.color = currentColor;
+      toast('Color guardado ✓');
+    } catch (e2) {
+      currentColor = applyTheme(before);
+      markTheme();
+      toast(e2.message);
+    }
+  }
+
   const offs = [
+    on(content, 'click', '[data-color]', (e, el) => saveColor(el.dataset.color)),
+    on(content, 'input', '[data-custom]', (e, el) => {
+      // Vista previa mientras se mueve el selector; se guarda al soltarlo.
+      applyTheme(el.value);
+    }),
+    on(content, 'change', '[data-custom]', (e, el) => saveColor(el.value)),
     on(content, 'click', '[data-copy]', (e, el) => copyText(copies[el.dataset.copy] ?? '')),
+    on(content, 'submit', '[data-calendly-form]', (e, form) => {
+      e.preventDefault();
+      calendlyAction(form, 'conectar');
+    }),
+    on(content, 'click', '[data-calendly-off]', (e, el) => calendlyAction(el.closest('form'), 'desconectar')),
     on(content, 'click', '[data-reveal]', (e, el) => {
       const input = content.querySelector(`[data-copysrc="${CSS.escape(el.dataset.reveal)}"]`);
       if (!input) return;

@@ -37,7 +37,7 @@
 .crm-panel .clientes-fields .crm-field-value { overflow-wrap: anywhere; }
 .crm-panel .crm-field .editable { cursor: text; border-radius: 6px; transition: background 0.15s ease; }
 .crm-panel .crm-field .editable:hover,
-.crm-panel .crm-field .editable:focus-visible { background: rgba(236, 75, 40, 0.06); outline: none; }
+.crm-panel .crm-field .editable:focus-visible { background: rgba(var(--accent-rgb), 0.06); outline: none; }
 .crm-panel .crm-field input,
 .crm-panel .crm-field textarea { width: 100%; }
 .crm-panel .crm-field textarea {
@@ -50,7 +50,7 @@
   line-height: 1.45;
   resize: vertical;
 }
-.crm-panel .crm-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.crm-panel .crm-field textarea:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
 .crm-panel .crm-field select:disabled { opacity: 0.7; cursor: not-allowed; }
 .clientes-field-multiline { white-space: pre-wrap; }
 .clientes-wa-link { display: inline-block; font-size: 12px; font-weight: 700; color: #059669; margin: -8px 0 14px; text-decoration: none; }
@@ -85,7 +85,7 @@
   font-size: 13px;
   color: var(--ink);
 }
-.clientes-pay-form select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.12); }
+.clientes-pay-form select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.12); }
 .clientes-pay-form .lite-error,
 .clientes-renov-form .lite-error { margin: 0; min-height: 0; }
 .clientes-pay-form .lite-error:empty,

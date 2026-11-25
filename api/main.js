@@ -8,5 +8,6 @@ import * as contenido from './_routes/contenido.js';
 import * as resultados from './_routes/resultados.js';
 import * as dashboard from './_routes/dashboard.js';
 import * as equipo from './_routes/equipo.js';
+import * as calendly from './_routes/calendly.js';
 
-export default createRouter([core, ventas, clientes, contenido, resultados, dashboard, equipo]);
+export default createRouter([core, ventas, clientes, contenido, resultados, dashboard, equipo, calendly]);

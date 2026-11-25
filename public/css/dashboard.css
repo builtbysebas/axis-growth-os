@@ -5,7 +5,7 @@
 .dsh-gap { margin-bottom: 30px; }
 
 /* Tarjeta de aviso: llamadas pasadas sin resultado. */
-.dx-tile.dsh-tile-warn { border-color: rgba(236, 75, 40, 0.35); box-shadow: 0 0 0 3px rgba(236, 75, 40, 0.08), var(--glass-shadow); }
+.dx-tile.dsh-tile-warn { border-color: rgba(var(--accent-rgb), 0.35); box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.08), var(--glass-shadow); }
 .dx-tile.dsh-tile-warn .dx-tile-value { color: var(--accent); }
 .dx-tile-sub a { color: var(--accent); font-weight: 700; }
 

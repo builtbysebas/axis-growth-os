@@ -15,6 +15,13 @@
   <link rel="stylesheet" href="/css/resultados.css">
   <link rel="stylesheet" href="/css/dashboard.css">
   <link rel="stylesheet" href="/css/equipo.css">
+  <script>
+    // Color del negocio guardado en este navegador (ver js/core/theme.js): evita ver el naranja un instante.
+    try {
+      var v = JSON.parse(localStorage.getItem('ago-theme') || 'null');
+      if (v) for (var k in v) if (/^--accent/.test(k)) document.documentElement.style.setProperty(k, v[k]);
+    } catch (e) {}
+  </script>
 </head>
 <body>
   <div id="app" aria-live="polite"><p class="lite-loading"><span class="lite-spinner"></span>Cargando…</p></div>

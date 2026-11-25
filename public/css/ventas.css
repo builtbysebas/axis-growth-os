@@ -32,7 +32,7 @@
 }
 .lite-overdue-row strong { font-size: 13.5px; color: var(--ink); }
 .lite-overdue-row span { font-size: 12px; color: var(--ink-soft); }
-.lite-overdue-row:hover { border-color: rgba(236, 75, 40, 0.35); }
+.lite-overdue-row:hover { border-color: rgba(var(--accent-rgb), 0.35); }
 
 /* Resultado: los campos se apilan con aire */
 .crm-outcome .lite-outcome-fields { display: flex; flex-direction: column; gap: 8px; }

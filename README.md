@@ -20,11 +20,13 @@ Corre gratis en tu propia cuenta de Vercel, con tu propia base de datos. Tus dat
 > Hazlo de corrido: la primera persona que abre la app crea la cuenta de administrador.
 
 **Después de entrar:**
-- En **Ajustes**: revisa la zona horaria y pon tu meta de cash del mes.
+- En **Ajustes**: elige el **color de tu marca**, revisa la zona horaria y pon tu meta de cash del mes.
 - En **Usuarios**: crea a tu equipo (setters, closers y coaches). La app te da el mensaje con el
   acceso listo para mandárselo.
-- En **Ajustes → Conectar ManyChat** y **Recibir agendas**: los pasos para que las respuestas a
-  tus contenidos y las agendas de Calendly entren solas.
+- En **Ajustes → Conectar Calendly**: pegas un token de Calendly y listo, cada agenda, reagenda y
+  cancelación entra sola a Ventas (sin Zapier ni n8n).
+- En **Ajustes → Conectar ManyChat**: los pasos para que las respuestas a tus contenidos y las
+  propuestas de los setters entren solas.
 
 Si la app dice «Falta conectar la base de datos», en Vercel ve a tu proyecto → **Storage** →
 crea una base **Neon** (plan Free) conectada al proyecto, y después **Deployments** → los tres

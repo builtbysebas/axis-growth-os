@@ -8,7 +8,7 @@ after(teardown);
 
 test('alta, sesión, permisos y ManyChat', async () => {
   let r = await api('GET', '/status');
-  assert.deepEqual(r.json, { connected: true, needsAdmin: true });
+  assert.deepEqual(r.json, { connected: true, needsAdmin: true, color: '' });
   assert.equal((await api('GET', '/auth/me', { cookie: '' })).status, 401);
 
   r = await api('POST', '/setup', { body: { nombre: 'Ana', email: ' Ana@Test.com ', password: 'corta' } });
@@ -171,4 +171,78 @@ test('webhook de agenda: formato simple, Calendly e idempotencia', async () => {
   assert.equal(v.instagram, 'carla');
   assert.equal(v.origen, 'calendly');
   assert.ok(v.closer_id, 'closer por email');
+});
+
+test('Calendly: setter por link, respuestas como nota, reagenda y cancelación', async () => {
+  await adminSession('ana@test.com', 'clave-larga-1');
+  const k = (await api('GET', '/settings')).json.manychatSecret;
+  const setter = await api('POST', '/usuarios', { body: { nombre: 'Rocío Setter', email: 'rocio@test.com', roles: ['setter'], password: 'clave-larga-9' } });
+  assert.ok([200, 201].includes(setter.status), JSON.stringify(setter.json));
+  const base = {
+    name: 'Lucía Reagenda',
+    email: 'lucia.r@mail.com',
+    tracking: { utm_source: 'rocio', utm_content: '888' },
+    questions_and_answers: [{ question: '¿Qué te gustaría lograr?', answer: 'Bajar de peso' }],
+  };
+  let r = await api('POST', `/webhooks/agenda?k=${k}`, {
+    body: { event: 'invitee.created', payload: { ...base, uri: 'inv-1', scheduled_event: { start_time: '2031-04-01T18:00:00Z' } } },
+  });
+  const id = r.json.id;
+  let d = (await api('GET', `/ventas/${id}`)).json;
+  assert.ok(d.venta.setter_id, 'setter por utm_source');
+  assert.ok(d.notas.some((n) => /Bajar de peso/.test(n.texto)), 'respuestas en nota');
+
+  // Reagenda: Calendly cancela la vieja (rescheduled) y crea la nueva con old_invitee.
+  r = await api('POST', `/webhooks/agenda?k=${k}`, { body: { event: 'invitee.canceled', payload: { ...base, uri: 'inv-1', rescheduled: true } } });
+  assert.ok(r.json.ignorada);
+  r = await api('POST', `/webhooks/agenda?k=${k}`, {
+    body: { event: 'invitee.created', payload: { ...base, uri: 'inv-2', old_invitee: 'inv-1', scheduled_event: { start_time: '2031-04-03T18:00:00Z' } } },
+  });
+  assert.equal(r.json.id, id);
+  assert.equal(r.json.reagendada, true);
+  // Reintento del mismo aviso: no duplica.
+  r = await api('POST', `/webhooks/agenda?k=${k}`, {
+    body: { event: 'invitee.created', payload: { ...base, uri: 'inv-2', old_invitee: 'inv-1', scheduled_event: { start_time: '2031-04-03T18:00:00Z' } } },
+  });
+  assert.equal(r.json.id, id);
+  d = (await api('GET', `/ventas/${id}`)).json;
+  assert.equal(new Date(d.venta.fecha_llamada).toISOString(), '2031-04-03T18:00:00.000Z');
+
+  // Cancelación de verdad.
+  r = await api('POST', `/webhooks/agenda?k=${k}`, {
+    body: { event: 'invitee.canceled', payload: { ...base, uri: 'inv-2', cancellation: { reason: 'Me salió un viaje', canceler_type: 'invitee' } } },
+  });
+  assert.equal(r.json.cancelada, true);
+  d = (await api('GET', `/ventas/${id}`)).json;
+  assert.ok(d.notas.some((n) => /Me salió un viaje/.test(n.texto)));
+});
+
+test('Calendly: conectar crea el webhook con el token y no lo guarda', async () => {
+  await adminSession('ana@test.com', 'clave-larga-1');
+  const realFetch = globalThis.fetch;
+  const calls = [];
+  globalThis.fetch = async (url, opts = {}) => {
+    calls.push({ url: String(url), method: opts.method || 'GET', body: opts.body ? JSON.parse(opts.body) : null, auth: opts.headers?.Authorization });
+    const u = String(url);
+    const json = (status, body) => new Response(JSON.stringify(body), { status });
+    if (u.endsWith('/users/me')) return json(200, { resource: { uri: 'https://api.calendly.com/users/U1', email: 'dueña@mail.com', name: 'Dueña', current_organization: 'https://api.calendly.com/organizations/O1' } });
+    if (u.includes('/webhook_subscriptions?')) return json(200, { collection: [] });
+    if (u.endsWith('/webhook_subscriptions') && opts.method === 'POST') return json(201, { resource: { uri: 'https://api.calendly.com/webhook_subscriptions/W1' } });
+    return json(404, {});
+  };
+  try {
+    assert.equal((await api('POST', '/calendly/conectar', { body: { token: 'corto' } })).status, 400);
+    const r = await api('POST', '/calendly/conectar', { body: { token: 'tok_' + 'x'.repeat(40) } });
+    assert.equal(r.status, 200, JSON.stringify(r.json));
+    assert.equal(r.json.calendly.cuenta, 'dueña@mail.com');
+    const post = calls.find((c) => c.method === 'POST');
+    assert.deepEqual(post.body.events, ['invitee.created', 'invitee.canceled']);
+    assert.match(post.body.url, /\/api\/webhooks\/agenda\?k=/);
+    assert.equal(post.body.scope, 'organization');
+    const st = (await api('GET', '/calendly')).json.calendly;
+    assert.equal(st.conectado, true);
+    assert.ok(!JSON.stringify(st).includes('xxxxxxxx'), 'el token no se guarda');
+  } finally {
+    globalThis.fetch = realFetch;
+  }
 });

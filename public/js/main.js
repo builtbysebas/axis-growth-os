@@ -2,6 +2,7 @@
 import { PRODUCT, PRODUCT_BADGE, PRODUCT_MARK } from './core/brand.js';
 import { get, post, setUnauthorizedHandler } from './core/api.js';
 import { setTimeZone } from './core/dates.js';
+import { applyTheme } from './core/theme.js';
 import { esc, h } from './core/dom.js';
 import { initFx } from './core/fx.js';
 import { canSee, defaultPath, PAGES } from './core/pages.js';
@@ -111,6 +112,7 @@ async function loadAjustes() {
   try {
     state.ajustes = await get('/ajustes');
     setTimeZone(state.ajustes.zona);
+    applyTheme(state.ajustes.color);
   } catch {
     state.ajustes = { zona: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Lima', negocio: '', metaCash: 10000 };
   }
@@ -230,6 +232,7 @@ async function boot() {
   } catch (err) {
     return renderMessage('No se pudo abrir la app', err.message);
   }
+  if (status.color) applyTheme(status.color);
   if (!status.connected) return renderMessage('Falta conectar la base de datos', status.reason || '');
   if (status.needsAdmin) return renderSetup();
   renderLogin();

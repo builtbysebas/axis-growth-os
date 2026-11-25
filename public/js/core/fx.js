@@ -62,7 +62,7 @@ export function initFx() {
     spot.style.width = `${rect.width}px`;
     spot.style.height = `${rect.height}px`;
     spot.style.borderRadius = cs.borderRadius;
-    spot.style.setProperty('--fx-rgb', target.closest(WHITE_SPOT_SELECTOR) ? '255,255,255' : '236,75,40');
+    spot.style.setProperty('--fx-rgb', target.closest(WHITE_SPOT_SELECTOR) ? '255,255,255' : 'var(--accent-rgb)');
     spot.style.opacity = '1';
   }
   function hideSpot() {
@@ -338,8 +338,8 @@ function initSliders() {
 
 // ---------- 5. Ráfaga ----------
 const GRADS = [
-  ['#ff9448', '#ec4b28'],
-  ['#ec4b28', '#d946ef'],
+  ['var(--accent-2)', 'var(--accent)'],
+  ['var(--accent)', '#d946ef'],
   ['#6366f1', '#d946ef'],
   ['#10b981', '#6ee7b7'],
 ];
@@ -364,7 +364,7 @@ export function burst(anchor, count = 6) {
     p.style.setProperty('--rot', `${Math.round(Math.random() * 50 - 25)}deg`);
     p.style.setProperty('--sc', (0.85 + Math.random() * 0.5).toFixed(2));
     p.style.setProperty('--d', `${(i * 0.07).toFixed(2)}s`);
-    p.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><defs><linearGradient id="fxg${uid}${i}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${a}"/><stop offset="1" stop-color="${b}"/></linearGradient></defs><path d="${i % 3 === 2 ? STAR : HEART}" fill="url(#fxg${uid}${i})"/></svg>`;
+    p.innerHTML = `<svg viewBox="0 0 24 24" width="20" height="20"><defs><linearGradient id="fxg${uid}${i}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" style="stop-color:${a}"/><stop offset="1" style="stop-color:${b}"/></linearGradient></defs><path d="${i % 3 === 2 ? STAR : HEART}" fill="url(#fxg${uid}${i})"/></svg>`;
     box.appendChild(p);
   }
   document.body.appendChild(box);

@@ -102,8 +102,15 @@ export async function render(root, ctx) {
   let settings;
   let events;
   let calendly;
+  let usuarios = [];
   try {
-    [aj, settings, events, calendly] = await Promise.all([get('/ajustes'), get('/settings'), get('/events'), get('/calendly').then((r) => r.calendly)]);
+    [aj, settings, events, calendly, usuarios] = await Promise.all([
+      get('/ajustes'),
+      get('/settings'),
+      get('/events'),
+      get('/calendly').then((r) => r.calendly),
+      get('/usuarios').then((r) => r.usuarios || []).catch(() => []),
+    ]);
   } catch (err) {
     content.innerHTML = `<div class="lite-empty">No se pudieron cargar los ajustes: ${esc(err.message)}</div>`;
     return;
@@ -203,16 +210,113 @@ export async function render(root, ctx) {
       </form>`;
   }
 
+  // ---- links por setter (solo se arman acá; nada se guarda en el servidor) ----
+  const CAL_LINK_KEY = 'ago-cal-link';
+  let calLink = '';
+  try {
+    calLink = localStorage.getItem(CAL_LINK_KEY) || '';
+  } catch {
+    /* sin almacenamiento */
+  }
+  const firstWord = (s) =>
+    String(s || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .trim()
+      .split(/\s+/)[0]
+      .replace(/[^a-z0-9._-]/g, '');
+  const setters = usuarios.filter((u) => u.activo && (u.roles || []).includes('setter'));
+  const closers = usuarios.filter((u) => u.activo && (u.roles || []).includes('closer'));
+
+  /** Valor de utm_source que el OS reconoce: el primer nombre, o el correo si dos setters comparten nombre. */
+  function setterTag(u) {
+    const first = firstWord(u.nombre);
+    const repeated = setters.filter((o) => firstWord(o.nombre) === first).length > 1;
+    return !first || first.length < 2 || repeated ? u.email : first;
+  }
+
+  function buildLink(base, tag) {
+    let raw = String(base || '').trim();
+    if (!raw) return null;
+    if (!/^https?:\/\//i.test(raw)) raw = `https://${raw}`;
+    let url;
+    try {
+      url = new URL(raw);
+    } catch {
+      return null;
+    }
+    url.searchParams.delete('utm_source');
+    url.searchParams.delete('utm_content');
+    url.searchParams.set('utm_source', tag);
+    const direct = url.toString();
+    return { direct, manychat: `${direct}&utm_content=` };
+  }
+
+  function setterLinks() {
+    if (!setters.length) {
+      return '<div class="lite-empty">Todavía no tienes setters activos. Créalos en <strong>Usuarios</strong> con el rol setter y vuelve acá.</div>';
+    }
+    if (!calLink.trim()) {
+      return '<p class="lite-hint">Pega arriba tu link de Calendly y aparecen los links de cada setter listos para copiar.</p>';
+    }
+    const rows = setters.map((u) => {
+      const l = buildLink(calLink, setterTag(u));
+      if (!l) return '';
+      copies[`sl_d_${u.id}`] = l.direct;
+      copies[`sl_m_${u.id}`] = l.manychat;
+      return `
+        <div class="eq-setter-link">
+          <div class="eq-setter-name">${esc(u.nombre)}</div>
+          <span class="crm-field-label">Link directo (WhatsApp, bio, mensaje a mano)</span>
+          ${copyRow(l.direct, { label: `Link de ${u.nombre}`, key: `sl_d_${u.id}` })}
+          <span class="crm-field-label">Link para el botón de ManyChat</span>
+          ${copyRow(l.manychat, { label: `Link de ManyChat de ${u.nombre}`, key: `sl_m_${u.id}` })}
+        </div>`;
+    });
+    if (rows.every((r) => !r)) return '<p class="lite-error">Ese link no se entiende. Copia el link completo de tu evento en Calendly (ej. <code>calendly.com/tu-negocio/llamada</code>).</p>';
+    return rows.join('');
+  }
+
   function calendlyHelp() {
+    const sinCorreo = closers.length
+      ? `<p class="lite-hint">Tus closers acá: ${closers.map((c) => `<strong>${esc(c.nombre)}</strong> (${esc(c.email)})`).join(', ')}. Ese correo tiene que ser el mismo con el que cada una entra a Calendly.</p>`
+      : '<p class="lite-hint">Todavía no tienes closers activas. Créalas en <strong>Usuarios</strong> con el rol closer.</p>';
     return `
       <h3 class="eq-subtitle">Qué entra solo</h3>
       <ul class="eq-fields">
-        <li>Nombre, correo, la hora de la llamada y la <strong>closer</strong> (por el correo de quien recibe la llamada en Calendly: tiene que ser el mismo con el que entra acá).</li>
-        <li>Teléfono e Instagram, si tu formulario de Calendly tiene esas preguntas. Todas las respuestas quedan como primera nota de la agenda.</li>
-        <li><strong>Setter:</strong> en el link de Calendly de cada setter agrega <code>?utm_source=nombre</code> (ej. <code>calendly.com/tu-link?utm_source=rocio</code>). Sirve el primer nombre, el nombre completo o el correo del setter.</li>
-        <li><strong>ManyChat:</strong> si el link lleva <code>utm_content={{user_id}}</code>, la agenda se une con lo que respondió en tus contenidos.</li>
+        <li>Nombre, correo y la hora de la llamada.</li>
+        <li>Teléfono e Instagram, si tu formulario de Calendly tiene esas preguntas (que digan «teléfono», «celular», «WhatsApp» o «Instagram»).</li>
+        <li><strong>Todas las respuestas del formulario</strong>, pregunta por pregunta, como primera nota de la agenda.</li>
         <li>Si la lead <strong>se reagenda</strong>, se mueve la misma agenda (no se duplica). Si <strong>cancela</strong>, queda anotado y vuelve a «para hoy» para que alguien la contacte.</li>
-      </ul>`;
+        <li>Lo único que se marca a mano es el <strong>presupuesto</strong> (con o sin), en la agenda.</li>
+      </ul>
+
+      <h3 class="eq-subtitle">1. Un link por setter (para saber de quién es cada agenda)</h3>
+      <p class="eq-lead">No hace falta un evento distinto por setter: todos usan el <strong>mismo link</strong> de Calendly con una etiqueta al final (<code>?utm_source=nombre</code>). Cuando alguien agenda por ese link, la agenda queda asignada a ese setter.</p>
+      <div class="crm-field">
+        <label class="crm-field-label" for="eq-cal-link">Tu link de Calendly</label>
+        <input id="eq-cal-link" class="lite-input" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://calendly.com/tu-negocio/llamada" value="${esc(calLink)}" data-cal-link>
+        <p class="lite-hint eq-hint-after">Es el link del evento que comparten con las leads. Se recuerda solo en este navegador.</p>
+      </div>
+      <div class="eq-setter-links" data-setter-links>${setterLinks()}</div>
+      <p class="lite-hint eq-hint-after">Si cambias el nombre de un setter o entra uno nuevo, vuelve acá a copiar su link. Si dos setters tienen el mismo primer nombre, su link lleva el correo en vez del nombre.</p>
+
+      <h3 class="eq-subtitle">2. ManyChat: unir la agenda con el chat (Contact ID)</h3>
+      <ol class="eq-steps">
+        <li>En la automatización de ManyChat donde el setter manda el link, en el botón pega el <strong>Link para el botón de ManyChat</strong> de ese setter. Termina en <code>utm_content=</code>.</li>
+        <li>Con el cursor justo después del <code>=</code>, toca el botón de campos <strong>{ }</strong> y elige <strong>Contact Id</strong> (en algunas cuentas sale como <em>User Id</em>). No lo escribas a mano: tiene que ser el campo.</li>
+        <li>Queda así: <code>…?utm_source=rocio&amp;utm_content=</code><strong>Contact Id</strong>. Cada lead recibe su propio número.</li>
+      </ol>
+      <p class="lite-hint">Con eso la agenda guarda el Contact ID y en <strong>Resultados</strong> se ve qué contenido trajo a esa persona (el último que respondió antes de agendar). Para que funcione, ManyChat también tiene que avisar cuando responden a tus contenidos (tarjeta «Conectar ManyChat», más arriba).</p>
+
+      <h3 class="eq-subtitle">3. Varias closers (round robin)</h3>
+      <ul class="eq-fields">
+        <li>En Calendly crea un evento de equipo tipo <strong>Round Robin</strong> con tus closers: Calendly decide a quién le toca cada llamada (esta función es de los planes pagos de Calendly).</li>
+        <li>El OS asigna la agenda a la closer por su <strong>correo</strong>: el de Calendly tiene que ser el mismo con el que entra acá. Si no coinciden, la agenda entra sin closer y se asigna a mano.</li>
+        <li>Los links de setter de arriba funcionan igual con un evento Round Robin: usa el link del evento de equipo.</li>
+      </ul>
+      ${sinCorreo}`;
   }
 
   function eventsTable() {
@@ -417,6 +521,16 @@ export async function render(root, ctx) {
       applyTheme(el.value);
     }),
     on(content, 'change', '[data-custom]', (e, el) => saveColor(el.value)),
+    on(content, 'input', '[data-cal-link]', (e, el) => {
+      calLink = el.value;
+      try {
+        localStorage.setItem(CAL_LINK_KEY, calLink.trim());
+      } catch {
+        /* sin almacenamiento */
+      }
+      const box = content.querySelector('[data-setter-links]');
+      if (box) box.innerHTML = setterLinks();
+    }),
     on(content, 'click', '[data-copy]', (e, el) => copyText(copies[el.dataset.copy] ?? '')),
     on(content, 'submit', '[data-calendly-form]', (e, form) => {
       e.preventDefault();

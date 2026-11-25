@@ -111,3 +111,9 @@
 .eq-details > summary { cursor: pointer; font-size: 13px; font-weight: 700; color: var(--ink-soft); }
 .eq-details > summary:hover { color: var(--ink); }
 .eq-token-form { margin-top: 6px; }
+
+/* Links por setter (Ajustes → Calendly) */
+.eq-setter-links { display: flex; flex-direction: column; gap: 12px; margin: 4px 0 8px; }
+.eq-setter-link { border: 1px solid var(--glass-border); border-radius: 14px; padding: 12px 14px; background: rgba(255, 255, 255, 0.55); display: flex; flex-direction: column; gap: 6px; }
+.eq-setter-name { font-weight: 800; font-size: 14px; color: var(--ink); }
+.eq-setter-link .eq-copyrow { margin-bottom: 4px; }

@@ -20,6 +20,7 @@
     try {
       var v = JSON.parse(localStorage.getItem('ago-theme') || 'null');
       if (v) for (var k in v) if (/^--accent/.test(k)) document.documentElement.style.setProperty(k, v[k]);
+      if (v && /^data:image\/svg\+xml,/.test(v.icon || '')) document.querySelector('link[rel~="icon"]').href = v.icon;
     } catch (e) {}
   </script>
 </head>

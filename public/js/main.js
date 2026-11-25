@@ -112,7 +112,7 @@ async function loadAjustes() {
   try {
     state.ajustes = await get('/ajustes');
     setTimeZone(state.ajustes.zona);
-    applyTheme(state.ajustes.color);
+    applyTheme(state.ajustes.color, state.ajustes.negocio);
   } catch {
     state.ajustes = { zona: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Lima', negocio: '', metaCash: 10000 };
   }

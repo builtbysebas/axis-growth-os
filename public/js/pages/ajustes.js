@@ -397,14 +397,14 @@ export async function render(root, ctx) {
   markTheme();
   async function saveColor(c) {
     const before = currentColor;
-    currentColor = applyTheme(c);
+    currentColor = applyTheme(c, ctx.ajustes?.negocio ?? aj.negocio);
     markTheme();
     try {
       await patch('/ajustes', { color: currentColor });
       if (ctx.ajustes) ctx.ajustes.color = currentColor;
       toast('Color guardado ✓');
     } catch (e2) {
-      currentColor = applyTheme(before);
+      currentColor = applyTheme(before, ctx.ajustes?.negocio ?? aj.negocio);
       markTheme();
       toast(e2.message);
     }

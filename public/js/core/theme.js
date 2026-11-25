@@ -57,26 +57,49 @@ export function themeVars(hex) {
   };
 }
 
-function setFavicon(color) {
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="${color}"/><text x="16" y="22.5" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">A</text></svg>`;
-  let link = document.querySelector('link[rel="icon"]');
-  if (!link) {
-    link = document.createElement('link');
-    link.rel = 'icon';
-    document.head.appendChild(link);
-  }
-  link.type = 'image/svg+xml';
-  link.href = `data:image/svg+xml,${encodeURIComponent(svg)}`;
+let lastLetter = '';
+
+/** Primera letra del nombre del negocio (para el ícono de la pestaña). */
+function letterOf(name) {
+  const m = String(name || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').match(/[a-z0-9]/i);
+  return m ? m[0].toUpperCase() : '';
 }
 
-/** Aplica el color a toda la app (y lo recuerda en este navegador). */
-export function applyTheme(hex) {
+function faviconUrl(color, letter) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="${color}"/><text x="16" y="22.5" font-family="Arial,Helvetica,sans-serif" font-size="17" font-weight="800" fill="#fff" text-anchor="middle">${letter}</text></svg>`;
+  return `data:image/svg+xml,${encodeURIComponent(svg)}`;
+}
+
+function setFavicon(href) {
+  // Se reemplaza el <link> (algunos navegadores no refrescan el ícono si solo cambia el href).
+  document.querySelectorAll('link[rel~="icon"]').forEach((l) => l.remove());
+  const link = document.createElement('link');
+  link.rel = 'icon';
+  link.type = 'image/svg+xml';
+  link.href = href;
+  document.head.appendChild(link);
+}
+
+/**
+ * Aplica el color a toda la app y el ícono de la pestaña (con la inicial del negocio).
+ * Si no se pasa el negocio, se usa la última inicial conocida (o «A»).
+ */
+export function applyTheme(hex, negocio) {
   const vars = themeVars(hex || DEFAULT_COLOR);
   const root = document.documentElement;
   for (const [k, v] of Object.entries(vars)) root.style.setProperty(k, v);
-  setFavicon(vars['--accent']);
+  let stored = null;
   try {
-    localStorage.setItem(STORE_KEY, JSON.stringify(vars));
+    stored = JSON.parse(localStorage.getItem(STORE_KEY) || 'null');
+  } catch {
+    /* sin almacenamiento */
+  }
+  if (negocio !== undefined) lastLetter = letterOf(negocio);
+  const letter = lastLetter || stored?.letter || 'A';
+  const icon = faviconUrl(vars['--accent'], letter);
+  setFavicon(icon);
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify({ ...vars, letter, icon }));
   } catch {
     /* sin almacenamiento: se aplica igual en cada carga */
   }
